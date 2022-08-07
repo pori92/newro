@@ -184,7 +184,7 @@ int skill_get_walkdelay( uint16 skill_id ,uint16 skill_lv )        { skill_get_l
 int skill_get_time( uint16 skill_id ,uint16 skill_lv )             { skill_get_lv(skill_id, skill_lv, skill_db.find(skill_id)->upkeep_time); }
 int skill_get_time2( uint16 skill_id ,uint16 skill_lv )            { skill_get_lv(skill_id, skill_lv, skill_db.find(skill_id)->upkeep_time2); }
 int skill_get_castdef( uint16 skill_id )                           { skill_get(skill_id, skill_db.find(skill_id)->cast_def_rate); }
-int skill_get_castcancel( uint16 skill_id )                        { skill_get(skill_id, skill_db.find(skill_id)->castcancel); }
+bool skill_get_castcancel( uint16 skill_id )                       { return (skill_check(skill_id) && skill_db.find(skill_id)->castcancel); }
 int skill_get_maxcount( uint16 skill_id ,uint16 skill_lv )         { skill_get_lv(skill_id, skill_lv, skill_db.find(skill_id)->maxcount); }
 int skill_get_blewcount( uint16 skill_id ,uint16 skill_lv )        { skill_get_lv(skill_id, skill_lv, skill_db.find(skill_id)->blewcount); }
 int skill_get_castnodex( uint16 skill_id )                         { skill_get(skill_id, skill_db.find(skill_id)->castnodex); }
@@ -9484,7 +9484,7 @@ int skill_castend_nodamage_id (struct block_list *src, struct block_list *bl, ui
 	case NPC_SUMMONMONSTER:
 	case NPC_DEATHSUMMON:
 		if(md && md->skill_idx >= 0)
-			mob_summonslave(md,md->db->skill[md->skill_idx]->val,skill_lv,skill_id);
+			mob_summonslave(md,md->db->skill[md->skill_idx]->summons,skill_lv,skill_id);
 		break;
 
 	case NPC_CALLSLAVE:
@@ -9535,36 +9535,28 @@ int skill_castend_nodamage_id (struct block_list *src, struct block_list *bl, ui
 	case NPC_TRANSFORMATION:
 	case NPC_METAMORPHOSIS:
 		if(md && md->skill_idx >= 0) {
-			int class_ = mob_random_class (md->db->skill[md->skill_idx]->val,0);
+			int class_ = mob_random_class (md->db->skill[md->skill_idx]->summons);
 			if (skill_lv > 1) //Multiply the rest of mobs. [Skotlex]
-				mob_summonslave(md,md->db->skill[md->skill_idx]->val,skill_lv-1,skill_id);
+				mob_summonslave(md,md->db->skill[md->skill_idx]->summons,skill_lv-1,skill_id);
 			if (class_) mob_class_change(md, class_);
 		}
 		break;
 
 	case NPC_EMOTION_ON:
-	case NPC_EMOTION:
-		//val[0] is the emotion to use.
 		//NPC_EMOTION & NPC_EMOTION_ON can change a mob's mode 'permanently' [Skotlex]
-		//val[1] 'sets' the mode
-		//val[2] adds to the current mode
-		//val[3] removes from the current mode
-		//val[4] if set, asks to delete the previous mode change.
+		// NPC_EMOTION_ON adds the mode to the current mode
 		if(md && md->skill_idx >= 0 && tsc)
 		{
-			clif_emotion(bl, md->db->skill[md->skill_idx]->val[0]);
-			if(md->db->skill[md->skill_idx]->val[4] && tsce)
-				status_change_end(bl, type, INVALID_TIMER);
+			if (md->db->skill[md->skill_idx]->emotion2 > ET_NONE)
+				clif_emotion(bl, md->db->skill[md->skill_idx]->emotion2);
 
-			//If mode gets set by NPC_EMOTION then the target should be reset [Playtester]
-			if(!battle_config.npc_emotion_behavior && skill_id == NPC_EMOTION && md->db->skill[md->skill_idx]->val[1])
-				mob_unlocktarget(md,tick);
+			int mode_passive = (md->db->skill[md->skill_idx]->mob_mode & MD_AGGRESSIVE) ? 0 : MD_AGGRESSIVE;	// Remove aggressive mode when the new mob type is passive.
 
-			if(md->db->skill[md->skill_idx]->val[1] || md->db->skill[md->skill_idx]->val[2])
-				sc_start4(src,src, type, 100, skill_lv,
-					md->db->skill[md->skill_idx]->val[1],
-					md->db->skill[md->skill_idx]->val[2],
-					md->db->skill[md->skill_idx]->val[3],
+			if (md->db->skill[md->skill_idx]->mob_mode > -1)
+				sc_start4(src,src, SC_MODECHANGE, 100, skill_lv,
+					0,	// 'sets' the mode
+					md->db->skill[md->skill_idx]->mob_mode,	// adds to the current mode
+					mode_passive,	// removes from the current mode
 					skill_get_time(skill_id, skill_lv));
 
 			//Reset aggressive state depending on resulting mode
@@ -9573,6 +9565,35 @@ int skill_castend_nodamage_id (struct block_list *src, struct block_list *bl, ui
 		}
 		break;
 
+	case NPC_EMOTION:
+		// Change a mob's mode 'permanently'
+		if (md && md->skill_idx >= 0 && tsc) {
+			std::shared_ptr<s_mob_skill> skilltmp = md->db->skill[md->skill_idx];
+
+			if (skilltmp->emotion2 > ET_NONE)
+				clif_emotion(bl, skilltmp->emotion2);
+
+			if (skilltmp->mob_mode > -1 && tsc->data[SC_MODECHANGE])	// asks to delete the previous mode change regardless of the current monster mode since we 'sets' the mode
+				status_change_end(src, SC_MODECHANGE, INVALID_TIMER);
+
+			//If mode gets set by NPC_EMOTION then the target should be reset [Playtester]
+			if (!battle_config.npc_emotion_behavior && skilltmp->mob_mode > -1 && skilltmp->mob_mode != md->db->status.mode)
+				mob_unlocktarget(md,tick);
+
+			if (skilltmp->mob_mode > -1 && skilltmp->mob_mode != md->db->status.mode) {
+				sc_start4(src,src, SC_MODECHANGE, 100, skill_lv,
+					skilltmp->mob_mode,	// 'sets' the mode
+					0,	// adds to the current mode
+					0,	// removes from the current mode
+					skill_get_time(skill_id, skill_lv));
+			}
+
+			//Reset aggressive state depending on resulting mode
+			if (!battle_config.npc_emotion_behavior)
+				md->state.aggressive = status_has_mode(&md->status,MD_ANGRY)?1:0;
+		}
+		break;
+	
 	case NPC_POWERUP:
 		sc_start(src,bl,SC_INCATKRATE,100,200,skill_get_time(skill_id, skill_lv));
 		clif_skill_nodamage(src,bl,skill_id,skill_lv,

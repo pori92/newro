@@ -378,17 +378,25 @@ c_tower1,243,202,4	script	Demon in the Box#D240	VAVAYAGA,{
 		case MONDAY:
 		case THURSDAY:
 			.@item_id = 25506;	// Cute_Broom
+			.@exp = 279337600;
+			.@jexp = 186224800;
 			break;
 		case WEDNESDAY:
 		case SUNDAY:
 			.@item_id = 25507;	// Showy_Coral_Reef
+			.@exp = 347798000;
+			.@jexp = 231865000;
 			break;
 		case TUESDAY:
 		case FRIDAY:
 			.@item_id = 25505;	// Jokers_Wild
+			.@exp = 280442400;
+			.@jexp = 186961600;
 			break;
 		case SATURDAY:
 			.@item_id = 25509;	// Shining_Round_Shell
+			.@exp = 347798000;
+			.@jexp = 231865000;
 			break;
 		}
 		if (countitem(.@item_id) < 100) {
@@ -461,6 +469,7 @@ c_tower1,243,202,4	script	Demon in the Box#D240	VAVAYAGA,{
 		}
 		delitem .@item_id,100;
 		setquest 5967;
+		getexp .@exp, .@jexp;
 		mes "[Demon in the box]";
 		mes "Today, I'm going to take a look at the sincerity of bringing snacks, so let's eat them specially.";
 		close;
@@ -549,24 +558,24 @@ OnHour04:
 
 OnInit:
 	cloakonnpc();
-	questinfo( QTYPE_QUEST2, QMARK_YELLOW, "BaseLevel >= 240 && isbegin_quest(5971) == 0" );
+	questinfo( QTYPE_QUEST, QMARK_YELLOW, "BaseLevel >= 240 && isbegin_quest(5971) == 0" );
 
-	// TODO: re-check qi
-	questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "checkquest(5961,PLAYTIME) == 2" );
-	questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "checkquest(5965,PLAYTIME) == 2" );
-	questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "checkquest(5967,PLAYTIME) == 2" );
-	questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "checkquest(5968,PLAYTIME) == 2" );
-
-	questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "(isbegin_quest(5962) == 0 || isbegin_quest(5963) == 0 || isbegin_quest(5964) == 0) && checkquest(5961,PLAYTIME) == -1" );
-	questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "isbegin_quest(5969) == 0 && checkquest(5965,PLAYTIME) == -1" );
-	// questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "checkquest(5967,PLAYTIME) == -1" );
-	questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "isbegin_quest(5966) == 0 && checkquest(5968,PLAYTIME) == -1" );
-
+	// note: no questinfo for item gathering quests completed
 	questinfo( QTYPE_QUEST2, QMARK_YELLOW, "checkquest(5962,HUNTING) == 2" );
 	questinfo( QTYPE_QUEST2, QMARK_YELLOW, "checkquest(5963,HUNTING) == 2" );
 	questinfo( QTYPE_QUEST2, QMARK_YELLOW, "checkquest(5964,HUNTING) == 2" );
 	questinfo( QTYPE_QUEST2, QMARK_YELLOW, "isbegin_quest(5970) == 1" );
 	questinfo( QTYPE_QUEST2, QMARK_YELLOW, "checkquest(5966,HUNTING) == 2" );
+
+	questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "checkquest(5961,PLAYTIME) == 2" );
+	questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "checkquest(5965,PLAYTIME) == 2" );
+	questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "checkquest(5967,PLAYTIME) == 2" );
+	questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "checkquest(5968,PLAYTIME) == 2" );
+
+	questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "isbegin_quest(5971) == 2 && (isbegin_quest(5962) == 0 || isbegin_quest(5963) == 0 || isbegin_quest(5964) == 0 || isbegin_quest(5966) == 0) && checkquest(5961,PLAYTIME) == -1" );
+	questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "isbegin_quest(5971) == 2 && isbegin_quest(5969) == 0 && isbegin_quest(5970) == 0 && checkquest(5965,PLAYTIME) == -1" );
+	questinfo( QTYPE_DAILYQUEST, QMARK_YELLOW, "isbegin_quest(5971) == 2 && isbegin_quest(5966) == 0 && checkquest(5968,PLAYTIME) == -1" );
+	// note: no questinfo for item gathering quests PLAYTIME -1
 
 	donpcevent strnpcinfo(0) + "::OnHour04";
 	end;
@@ -608,18 +617,26 @@ OnInit:
 clock_01,77,79,8	script	Pet Mimic#D240_0	4_MIMIC,{// 508
 	if (BaseLevel < 240)
 		end;
-	if (!.npc_change)
-		donpcevent "clock_ub_random_mimic::OnRand";	// enabled the NPC independently of the player
+	if (isbegin_quest(5969) == 1) {
+		if (!.npc_change)
+			donpcevent strnpcinfo(0) + "::OnRand";	// enabled the NPC independently of the player
 
-	setpcblock PCBLOCK_NPC, true;
-	unittalk getcharid(3), "" + strcharinfo(0) + " : A pet mimic that the demon outside the dungeon asked to take care of.", bc_self;
-	erasequest 5969;
-	sleep2 500;
-	specialeffect2 EF_BASH;
-	setquest 5970;
-	sleep2 500;
-	unittalk getcharid(3), "" + strcharinfo(0) + " : Well... I took the food, so it's no problem, right?", bc_self;
-	setpcblock PCBLOCK_NPC, false;
+		setpcblock PCBLOCK_NPC, true;
+		unittalk getcharid(3), "" + strcharinfo(0) + " : A pet mimic that the demon outside the dungeon asked to take care of.", bc_self;
+		erasequest 5969;
+		specialeffect2 EF_BASH;
+		setquest 5970;
+		sleep2 500;
+		unittalk getcharid(3), "" + strcharinfo(0) + " : Well... I took the food, so it's no problem, right?", bc_self;
+		setpcblock PCBLOCK_NPC, false;
+		end;
+	}
+	if (isbegin_quest(5970) == 1) {
+		emotion ET_SURPRISE;
+		unittalk getcharid(3), "" + strcharinfo(0) + " : Let's leave this place.", bc_self;
+		end;
+	}
+	unittalk getcharid(3), "" + strcharinfo(0) + " : A mimic in a place like this?", bc_self;
 	end;
 
 OnRand:

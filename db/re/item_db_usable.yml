@@ -2329,7 +2329,7 @@ Body:
       getgroupitem(IG_E_LIMITPOWERBOOSTER);
   - Id: 9610
     AegisName: E_Mysterious_Water
-    Name: "[Event] Mysterious Water"
+    Name: "[Event]Mysterious Water"
     Type: Healing
     Weight: 10
     Trade:
@@ -48453,7 +48453,7 @@ Body:
       getgroupitem(IG_REFINE_ORE_BOX8_SET10);
   - Id: 17512
     AegisName: LI_HD_Elunium_Box30
-    Name: (Limited)Purified Eluminium Box(30)
+    Name: (Limited) Purified Eluminium Box(30)
     Type: Cash
     Buy: 20
     Weight: 10
@@ -48471,7 +48471,7 @@ Body:
       getgroupitem(IG_LI_HD_ELUNIUM_BOX30);
   - Id: 17513
     AegisName: LI_HD_Oridecon_Box30
-    Name: (Limited)Purified Oridecon Box(30)
+    Name: (Limited) Purified Oridecon Box(30)
     Type: Cash
     Buy: 20
     Weight: 10
@@ -66583,6 +66583,13 @@ Body:
     Script: |
       specialeffect2 EF_POTION_BERSERK;
       sc_start SC_INFINITY_DRINK,1800000,0;
+  - Id: 101099
+    AegisName: ClockTower_Regulator
+    Name: Spring Regulator
+    Type: DelayConsume
+    Weight: 10
+    Script: |
+      item_enchant(24);
   - Id: 101100
     AegisName: Poenetentia_Box3
     Name: Poenitentia Two Swords Set Box

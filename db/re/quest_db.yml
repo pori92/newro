@@ -3250,8 +3250,7 @@ Body:
           SIEGLOUSE: true
   - Id: 5965
     Title: "[Standby] Devil's Special"
-    # TODO: reset monday at 4h
-    TimeLimit: 7d 4h
+    TimeLimit: Monday 4h
   - Id: 5966
     Title: Devil's Special
     Targets:

@@ -11297,6 +11297,8 @@
 	export_constant(SCF_REMOVEONUNEQUIPARMOR);
 	export_constant(SCF_REMOVEONHERMODE);
 	export_constant(SCF_REQUIRENOWEAPON);
+	export_constant(SCF_DISPLAYMOB);
+	export_constant(SCF_DISPLAYALL);
 
 	/* enchantgrades */
 	export_constant(ENCHANTGRADE_NONE);

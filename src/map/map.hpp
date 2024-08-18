@@ -21,6 +21,7 @@
 
 #include "navi.hpp"
 #include "script.hpp"
+#include "path.hpp"
 
 using rathena::server_core::Core;
 using rathena::server_core::e_core_type;
@@ -66,7 +67,7 @@ void map_msg_reload(void);
 #define NATURAL_HEAL_INTERVAL 500
 #define MIN_FLOORITEM 2
 #define MAX_FLOORITEM START_ACCOUNT_NUM
-#define MAX_LEVEL 260
+#define MAX_LEVEL 275
 #define MAX_DROP_PER_MAP 48
 #define MAX_IGNORE_LIST 20 	// official is 14
 #define MAX_VENDING 12
@@ -366,6 +367,8 @@ enum e_race2 : uint8{
 	RC2_ILLUSION_TURTLE,
 	RC2_RACHEL_SANCTUARY,
 	RC2_ILLUSION_LUANDA,
+	RC2_ILLUSION_FROZEN,
+	RC2_ILLUSION_MOONLIGHT,
 	RC2_MAX
 };
 
@@ -673,6 +676,7 @@ enum e_mapflag : int16 {
 	MF_NOBUYINGSTORE,
 	MF_NODYNAMICNPC,
 	MF_NOBANK,
+	MF_SPECIALPOPUP,
 	MF_MAX
 };
 
@@ -1124,7 +1128,7 @@ int map_count_oncell(int16 m,int16 x,int16 y,int type,int flag);
 struct skill_unit *map_find_skill_unit_oncell(struct block_list *,int16 x,int16 y,uint16 skill_id,struct skill_unit *, int flag);
 // search and creation
 int map_get_new_object_id(void);
-int map_search_freecell(struct block_list *src, int16 m, int16 *x, int16 *y, int16 rx, int16 ry, int flag);
+int map_search_freecell(struct block_list *src, int16 m, int16 *x, int16 *y, int16 rx, int16 ry, int flag, int32 tries = 50);
 bool map_closest_freecell(int16 m, int16 *x, int16 *y, int type, int flag);
 //
 int map_quit(map_session_data *);
@@ -1135,7 +1139,7 @@ bool map_addnpc(int16 m,struct npc_data *);
 TIMER_FUNC(map_clearflooritem_timer);
 TIMER_FUNC(map_removemobs_timer);
 void map_clearflooritem(struct block_list* bl);
-int map_addflooritem(struct item *item, int amount, int16 m, int16 x, int16 y, int first_charid, int second_charid, int third_charid, int flags, unsigned short mob_id, bool canShowEffect = false);
+int map_addflooritem(struct item *item, int amount, int16 m, int16 x, int16 y, int first_charid, int second_charid, int third_charid, int flags, unsigned short mob_id, bool canShowEffect = false, enum directions dir = DIR_MAX, int type = BL_NUL);
 
 // instances
 int map_addinstancemap(int src_m, int instance_id, bool no_mapflag);

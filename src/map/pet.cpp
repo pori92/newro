@@ -865,11 +865,11 @@ static TIMER_FUNC(pet_hungry){
 		}
 
 		status_calc_pet(pd,SCO_NONE);
-		clif_send_petdata(sd,pd,1,pd->pet.intimate);
+		clif_send_petdata( sd, *pd, CHANGESTATEPET_INTIMACY, pd->pet.intimate );
 		interval = 20000; // While starving, it's every 20 seconds
 	}
 
-	clif_send_petdata(sd,pd,2,pd->pet.hungry);
+	clif_send_petdata( sd, *pd, CHANGESTATEPET_HUNGER, pd->pet.hungry );
 
 	if( battle_config.feature_pet_autofeed && pd->pet.autofeed && pd->pet.hungry <= battle_config.feature_pet_autofeed_rate ){
 		pet_food( sd, pd );
@@ -940,7 +940,7 @@ static int pet_performance(map_session_data *sd, struct pet_data *pd)
 		val = 1;
 
 	pet_stop_walking(pd,2000<<8);
-	clif_pet_performance(pd, rnd_value(1, val));
+	clif_send_petdata( nullptr, *pd, CHANGESTATEPET_PERFORMANCE, rnd_value(1, val) );
 	pet_lootitem_drop( *pd, nullptr );
 
 	return 1;
@@ -966,7 +966,7 @@ bool pet_return_egg( map_session_data *sd, struct pet_data *pd ){
 	pd->pet.incubate = 1;
 #if PACKETVER >= 20180704
 	clif_inventorylist(sd);
-	clif_send_petdata(sd, pd, 6, 0);
+	clif_send_petdata( sd, *pd, CHANGESTATEPET_UPDATE_EGG, 0 );
 #endif
 	unit_free(&pd->bl,CLR_OUTSIGHT);
 
@@ -1108,13 +1108,13 @@ int pet_birth_process(map_session_data *sd, struct s_pet *pet)
 			return 1;
 
 		clif_spawn(&sd->pd->bl);
-		clif_send_petdata(sd,sd->pd, 0,0);
-		clif_send_petdata(sd,sd->pd, 5,battle_config.pet_hair_style);
+		clif_send_petdata( sd, *sd->pd, CHANGESTATEPET_INIT, 0 );
+		clif_send_petdata( sd, *sd->pd, CHANGESTATEPET_HAIRSTYLE, battle_config.pet_hair_style );
 #if PACKETVER >= 20180704
-		clif_send_petdata(sd, sd->pd, 6, 1);
+		clif_send_petdata( sd, *sd->pd, CHANGESTATEPET_UPDATE_EGG, 1 );
 #endif
-		clif_pet_equip_area(sd->pd);
-		clif_send_petstatus(sd);
+		clif_pet_equip_area( *sd->pd );
+		clif_send_petstatus( *sd, *sd->pd );
 		clif_pet_autofeed_status(sd,true);
 	}
 
@@ -1169,10 +1169,10 @@ int pet_recv_petdata(uint32 account_id,struct s_pet *p,int flag)
 				return 1;
 
 			clif_spawn(&sd->pd->bl);
-			clif_send_petdata(sd,sd->pd,0,0);
-			clif_send_petdata(sd,sd->pd,5,battle_config.pet_hair_style);
-			clif_pet_equip_area(sd->pd);
-			clif_send_petstatus(sd);
+			clif_send_petdata( sd, *sd->pd, CHANGESTATEPET_INIT, 0 );
+			clif_send_petdata( sd, *sd->pd, CHANGESTATEPET_HAIRSTYLE, battle_config.pet_hair_style );
+			clif_pet_equip_area( *sd->pd );
+			clif_send_petstatus( *sd, *sd->pd );
 		}
 	}
 
@@ -1414,7 +1414,7 @@ int pet_menu(map_session_data *sd,int menunum)
 
 	switch(menunum) {
 		case 0:
-			clif_send_petstatus(sd);
+			clif_send_petstatus( *sd, *sd->pd );
 			break;
 		case 1:
 			pet_food(sd, sd->pd);
@@ -1477,15 +1477,15 @@ int pet_change_name_ack(map_session_data *sd, char* name, int flag)
 
 	if ( !flag || !strlen(name) ) {
 		clif_displaymessage(sd->fd, msg_txt(sd,280)); // You cannot use this name for your pet.
-		clif_send_petstatus(sd); //Send status so client knows pet name change got rejected.
+		clif_send_petstatus( *sd, *pd ); //Send status so client knows pet name change got rejected.
 		return 0;
 	}
 
 	safestrncpy(pd->pet.name, name, NAME_LENGTH);
 	clif_name_area(&pd->bl);
 	pd->pet.rename_flag = 1;
-	clif_pet_equip_area(pd);
-	clif_send_petstatus(sd);
+	clif_pet_equip_area( *pd );
+	clif_send_petstatus( *sd, *pd );
 
 	int index = pet_egg_search( sd, pd->pet.pet_id );
 
@@ -1529,7 +1529,7 @@ int pet_equipitem(map_session_data *sd,int index)
 	pc_delitem(sd,index,1,0,0,LOG_TYPE_OTHER);
 	pd->pet.equip = nameid;
 	status_set_viewdata(&pd->bl, pd->pet.class_); //Updates view_data.
-	clif_pet_equip_area(pd);
+	clif_pet_equip_area( *pd );
 
 	if (battle_config.pet_equip_required) { // Skotlex: start support timers if need
 		t_tick tick = gettick();
@@ -1582,7 +1582,7 @@ static int pet_unequipitem(map_session_data *sd, struct pet_data *pd)
 
 	pd->pet.equip = 0;
 	status_set_viewdata(&pd->bl, pd->pet.class_);
-	clif_pet_equip_area(pd);
+	clif_pet_equip_area(*pd);
 
 	if( battle_config.pet_equip_required ) { // Skotlex: halt support timers if needed
 		if( pd->state.skillbonus ) {
@@ -1660,8 +1660,8 @@ int pet_food(map_session_data *sd, struct pet_data *pd)
 
 	log_feeding(sd, LOG_FEED_PET, pet_db_ptr->FoodID);
 
-	clif_send_petdata(sd,pd,2,pd->pet.hungry);
-	clif_send_petdata(sd,pd,1,pd->pet.intimate);
+	clif_send_petdata( sd, *pd, CHANGESTATEPET_HUNGER, pd->pet.hungry );
+	clif_send_petdata( sd, *pd, CHANGESTATEPET_INTIMACY, pd->pet.intimate );
 	clif_pet_food( *sd, pet_db_ptr->FoodID, 1 );
 
 	return 0;
@@ -2324,10 +2324,10 @@ void pet_evolution(map_session_data *sd, int16 pet_id) {
 		return;
 
 	clif_spawn(&sd->pd->bl);
-	clif_send_petdata(sd, sd->pd, 0, 0);
-	clif_send_petdata(sd, sd->pd, 5, battle_config.pet_hair_style);
-	clif_pet_equip_area(sd->pd);
-	clif_send_petstatus(sd);
+	clif_send_petdata( sd, *sd->pd, CHANGESTATEPET_INIT, 0 );
+	clif_send_petdata( sd, *sd->pd, CHANGESTATEPET_HAIRSTYLE, battle_config.pet_hair_style );
+	clif_pet_equip_area( *sd->pd );
+	clif_send_petstatus( *sd, *sd->pd );
 	clif_emotion(&sd->bl, ET_BEST);
 	clif_specialeffect(&sd->pd->bl, EF_HO_UP, AREA);
 

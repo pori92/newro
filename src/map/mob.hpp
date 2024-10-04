@@ -13,6 +13,7 @@
 #include "status.hpp" // struct status data, struct status_change
 #include "unit.hpp" // unit_stop_walking(), unit_stop_attack()
 
+enum e_emotion_type : int8;
 struct guardian_data;
 
 //This is the distance at which @autoloot works,
@@ -200,7 +201,7 @@ struct s_mob_skill {
 	int64 cond2;
 	short target;
 	int val[5];
-	short emotion;
+	e_emotion_type emotion;
 	unsigned short msg_id;
 };
 

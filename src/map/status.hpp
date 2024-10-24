@@ -1319,6 +1319,22 @@ enum sc_type : int16 {
 	SC_STR_SCROLL,
 	SC_INT_SCROLL,
 
+	// Soul Ascetic
+	SC_TALISMAN_OF_PROTECTION,
+	SC_TALISMAN_OF_WARRIOR,
+	SC_TALISMAN_OF_MAGICIAN,
+	SC_TALISMAN_OF_FIVE_ELEMENTS,
+	SC_T_FIRST_GOD,
+	SC_T_SECOND_GOD,
+	SC_T_THIRD_GOD,
+	SC_T_FOURTH_GOD,
+	SC_T_FIFTH_GOD,
+	SC_HEAVEN_AND_EARTH,
+	SC_TOTEM_OF_TUTELARY,
+
+#ifdef RENEWAL
+	SC_EXTREMITYFIST2, //! NOTE: This SC should be right before SC_MAX, so it doesn't disturb if RENEWAL is disabled
+#endif
 	SC_MAX, //Automatically updated max, used in for's to check we are within bounds.
 };
 

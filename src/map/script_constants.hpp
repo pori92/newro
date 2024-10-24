@@ -1923,6 +1923,17 @@
 	export_constant(SC_EP16_DEF);
 	export_constant(SC_STR_SCROLL);
 	export_constant(SC_INT_SCROLL);
+	export_constant(SC_TALISMAN_OF_PROTECTION);
+	export_constant(SC_TALISMAN_OF_WARRIOR);
+	export_constant(SC_TALISMAN_OF_MAGICIAN);
+	export_constant(SC_TALISMAN_OF_FIVE_ELEMENTS);
+	export_constant(SC_TOTEM_OF_TUTELARY);
+	export_constant(SC_T_FIRST_GOD);
+	export_constant(SC_T_SECOND_GOD);
+	export_constant(SC_T_THIRD_GOD);
+	export_constant(SC_T_FOURTH_GOD);
+	export_constant(SC_T_FIFTH_GOD);
+	export_constant(SC_HEAVEN_AND_EARTH);
 
 	/* status icons */
 	export_deprecated_constant2("SI_BLANK",-1);
